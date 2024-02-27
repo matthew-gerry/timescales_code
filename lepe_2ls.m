@@ -1,24 +1,16 @@
 % lepe_2ls.m
 
-% Using the LEPE method (arxiv: 2301.06135) to assess the behaviour of
-% coherences and populations in transient dynamics for a spin-boson model 
-% in the high temperature limit (nearly degenerate states).
+% Using the LEPE method (Phys Rev E 108, 014130, 2023) to assess the
+% behaviour of coherences and populations in transient dynamics for a 
+% spin-boson model in the high temperature limit (nearly degenerate states).
 
-% System operator in the interaction Hamiltonian I + Z + X or:
-%  [[2,1]
-%   [1,0]]/sqrt(2)
+% System operator in the interaction Hamiltonian Z + X or:
+%  [[1,1]
+%   [1,-1]]/sqrt(2)
 % so as to give nontrivial behaviour with respect to coherences (not pure
 % decoherence or equal probabilities to transition to the two different
 % basis states - which turns out to be roughly the same thing in the high-
 % temp limit).
-
-% Note that the addition of the identity in the system coupling operator 
-% helps with intuition when it comes to understanding what type of jumps we
-% would like the interaction with the bath to cause. However, it has not
-% effect on the equations of motion, so the least redundant way to express
-% the coupling is as Z + X or:
-%  [[1,1]
-%   [1,-1]]/sqrt(2).
 
 % Matthew Gerry, July 2023
 
@@ -40,7 +32,7 @@ B1 = [[1,0,0];
       [-2*k, -2*k, 0];
       [8*k^2, 8*k^2, -2*k*D]];
 
-% matrix for expressing derivatives of the real part of the coherence in
+% Matrix for expressing derivatives of the real part of the coherence in
 % terms of elements of the initial state
 B2 = [[0, 1, 0];
       [-2*k, -2*k, D];
@@ -130,11 +122,25 @@ rho11_uqme = 1/2 + x(1,:);
 tau1 = 4*k_val/(D_val^2);
 tau2 = 1/(2*k_val);
 
+% Plot each element of the density operator as desired
+subplot(2,1,1,xscale="log"); hold on; box on
+semilogx(time, rho11_uqme, linewidth=1.5, DisplayName="Unified QME")
+semilogx(time, rho11_plot, '--k', DisplayName="Analytic")
+xlim([min(time), max(time)])
+ylim([-0.01, 0.56])
+xticks([1,1e3,1e6])
+% xlabel("$t$",Interpreter="latex")
+ylabel("$\rho_{11}(t)$",Interpreter="latex")
+taulines = xline([tau1,tau2],'--',["$\tau_1$","$\tau_2$"],Interpreter='latex',fontsize=14,LabelOrientation='horizontal');
+text(0.05,0.5,"(a)",Interpreter="latex",FontSize=14)
+% legend(location='northwest',Interpreter='latex')
+set(gca,fontsize=14)
+hold off
+
 subplot(2,1,2,xscale="log"); hold on; box on
 semilogx(time,rho10_real_uqme, color=[0.64,0.08,0.18], Linewidth=1.5, DisplayName="Unified QME")
 semilogx(time,rho10_real_plot, '--k', linewidth=1,DisplayName="Analytic")
 % semilogx(time,rho10_real_expression, '--k')
-
 xlim([min(time), max(time)])
 ylim([-0.01, 0.3])
 xticks([1,1e3,1e6])
@@ -158,21 +164,6 @@ hold off
 % set(gca,fontsize=14)
 % hold off
 
-subplot(2,1,1,xscale="log"); hold on; box on
-semilogx(time, rho11_uqme, linewidth=1.5, DisplayName="Unified QME")
-semilogx(time, rho11_plot, '--k', DisplayName="Analytic")
-xlim([min(time), max(time)])
-ylim([-0.01, 0.56])
-xticks([1,1e3,1e6])
-% xlabel("$t$",Interpreter="latex")
-ylabel("$\rho_{11}(t)$",Interpreter="latex")
-taulines = xline([tau1,tau2],'--',["$\tau_1$","$\tau_2$"],Interpreter='latex',fontsize=14,LabelOrientation='horizontal');
-text(0.05,0.5,"(a)",Interpreter="latex",FontSize=14)
-% legend(location='northwest',Interpreter='latex')
-set(gca,fontsize=14)
-hold off
-
-
 
 %% DOING IT ALL AGAIN IN A NEW BASIS
 % We have changed to the basis where the interaction looks like Z and the 
@@ -185,18 +176,11 @@ syms k D t O22 O23
 assume(k, 'real')
 assume(D, 'real')
 
-% The contributions to lambda2 and lambda3 that are second order in Delta 
-% (solved by hand) - to break the degeneracy of the Liouvillian
-% O22 = (1/(8*k))*(D^2 - sqrt(D^4 - 2*k^2*D^2));
-% O23 = (1/(8*k))*(D^2 + sqrt(D^4 - 2*k^2*D^2));
-% BUT THESE BREAK EVERYTHING SO USING A WORKAROUND FOR NOW
-
 % Eigenvalues of the Liouvillian to leading order in D (done by hand)
-% l1 = -D^2/(4*k); l2 = -2*k; l3 = -2*k;
 l1 = -D^2/(4*k); l2 = -2*k + O22; l3 = -2*k + O23;
-% The WORKAROUND is that I remain agnostic as to what the next order
-% contributions to l2 and l3 are, but I know they should be O(D) which is
-% small, so I'll just set them to zero later
+% To avoid a singularity, we include the next order contributions to l2 and
+% l3 but remain agnostic as to their value. We know they should be of order
+% ~D which is small, so they'll be taken to zero later.
 
 lambda = [l1, l2, l3];
 
@@ -216,8 +200,7 @@ B2 = [[0, 1, 0];
       [0, -2*k, -D/sqrt(2)];
       [D^2/2, 4*k^2-D^2/2, 2*sqrt(2)*k*D]];
 
-% Matrix for expressing derivatives of the imag part of the coherence in
-% terms of elements of the initial state
+% And the imag part of the coherence
 B3 = [[0, 0, 1];
       [-D/sqrt(2), D/sqrt(2),-2*k];
       [sqrt(2)*k*D, -2*sqrt(2)*k*D, -D^2 + 4*k^2]];
@@ -250,9 +233,7 @@ rho10_real = sum(exp(lambda*t).*c2'); % Real part of the coherence
 rho10_imag = sum(exp(lambda*t).*c3'); % Real part of the coherence
 
 % Now drop the unknown next-order contributions to the larger eigenvalues -
-% it seems that once you set one to zero the other becomes irrelevant, but
-% troubles arise when you try to set both to zero together (this might be
-% an issue). For now, we just set O22 to zero
+% it is sufficient to set just one to zero, we choose O22
 P = simplify(subs(P, O22, 0));
 rho10_real = simplify(subs(rho10_real, O22, 0));
 rho10_imag = simplify(subs(rho10_imag, O22, 0));
@@ -261,10 +242,10 @@ rho11 = 1/2 - P; % Population of the |+> state
 rho00 = 1/2 + P; % Population of the |-> state
 
 % Figure out the values of population and coherence in the transient regime
-% rho11_transient = subs(rho11,D,0);
-% rho11_transient = subs(rho11_transient,t,Inf);
-% rho10_real_transient = subs(rho10_real,D,0);
-% rho10_real_transient = subs(rho10_real_transient,t,Inf);
+rho11_transient = subs(rho11,D,0);
+rho11_transient = subs(rho11_transient,t,Inf);
+rho10_real_transient = subs(rho10_real,D,0);
+rho10_real_transient = subs(rho10_real_transient,t,Inf);
 
 % Substitute in values for plotting
 a = 0.02;
@@ -284,11 +265,10 @@ rho10_imag_plot = subs(rho10_imag,[k,D],[k_val,D_val]);
 rho10_imag_plot = double(subs(rho10_imag_plot,t,time));
 
 
-%%% FULL REDFIELD - FULLY NUMERICAL %%%
+%%% FULL UQME - FULLY NUMERICAL %%%
 % For comparison to analytic results from LEPE
 % This is easy to do since the equations of motion for x (simplified way to
 % express the state) are still homogeneous for this model
-
 
 % Liovillian
 L = -2*k_val*[[0,0,0];
@@ -316,6 +296,21 @@ rho00_uqme_a = 1/2 + x(1,:);
 tau1 = 4*k_val/(D_val^2);
 tau2 = 1/(2*k_val);
 
+% Plot each element of the density operator in the transformed basis
+subplot(2,1,1,xscale="log"); hold on; box on
+semilogx(time, rho00_uqme_a, linewidth=1.5, DisplayName="Unified QME")
+semilogx(time, rho00_plot, '--k', DisplayName="Analytic")
+taulines = xline([tau1,tau2],'--',["$\tau_1$","$\tau_2$"],Interpreter='latex',fontsize=14,LabelOrientation='horizontal');
+xlim([min(time), max(time)])
+xticks([1,1e3,1e6])
+ylim([0.0, 1.1])
+% xlabel("$t$",Interpreter="latex")
+ylabel("$\rho_{--}(t)$",Interpreter="latex")
+% legend(location='southwest',Interpreter='latex')
+text(0.05,0.96,"(a)",Interpreter="latex",FontSize=14)
+set(gca,fontsize=14)
+hold off
+
 subplot(2,1,2,xscale="log"); hold on; box on
 semilogx(time,rho10_real_uqme_a, color=[0.64,0.08,0.18], linewidth=1.5,DisplayName="Unified QME")
 semilogx(time,rho10_real_plot, '--k', DisplayName="Analytic")
@@ -339,24 +334,11 @@ hold off
 % set(gca,fontsize=14)
 % hold off
 
-subplot(2,1,1,xscale="log"); hold on; box on
-semilogx(time, rho00_uqme_a, linewidth=1.5, DisplayName="Unified QME")
-semilogx(time, rho00_plot, '--k', DisplayName="Analytic")
-taulines = xline([tau1,tau2],'--',["$\tau_1$","$\tau_2$"],Interpreter='latex',fontsize=14,LabelOrientation='horizontal');
-xlim([min(time), max(time)])
-xticks([1,1e3,1e6])
-ylim([0.0, 1.1])
-% xlabel("$t$",Interpreter="latex")
-ylabel("$\rho_{--}(t)$",Interpreter="latex")
-% legend(location='southwest',Interpreter='latex')
-text(0.05,0.96,"(a)",Interpreter="latex",FontSize=14)
-set(gca,fontsize=14)
-hold off
-
 %% Investigate the equivalence of the results in the two bases (numerical only)
 
 % Construct density matrices in the two bases based on numerical results of
-% the previous two sections
+% the previous two sections (must run both previous sections of code in
+% order to run this section)
 
 % Eigenbasis
 rho_mat = zeros(2,2,length(time)); % Pre-allocate time-series for matrix
@@ -387,10 +369,15 @@ for ii=1:length(time)
     rho_mat_a_eig(:,:,ii) = V*rho_mat_a(:,:,ii)/V;
 end
 
+% Reshape data for plotting
 rho11_a_eig = reshape(real(rho_mat_a_eig(2,2,:)),[1,length(time)]);
 rho10_real_a_eig = reshape(real(rho_mat_a_eig(2,1,:)),[1,length(time)]);
 rho10_imag_a_eig = -reshape(imag(rho_mat_a_eig(1,2,:)),[1,length(time)]);
 
+% Plot each matrix element in the eigenbasis as calculated using the UQME,
+% alongside the same element as calculated using the UQME in the
+% transformed basis and then transformed back, to analyze the effect of
+% making the leading-order approximation before or after the transformation
 figure(1)
 subplot(1,3,1,xscale="log"); hold on; box on
 semilogx(time, rho11_a_eig, '--r')
@@ -405,34 +392,4 @@ hold off
 subplot(1,3,3,xscale="log"); hold on; box on
 semilogx(time, rho10_imag_a_eig, '--r')
 semilogx(time, rho10_imag_uqme, '-b')
-hold off
-
-
-% % Now do the opposite transformation to see how it compares
-% % Pre-allocate time series of matrices to be obtained by transforming from
-% % the eigenbasis to the alternate basis
-% rho_mat_trf = zeros(2,2,length(time));
-% % Transform back
-% for ii=1:length(time)
-%     rho_mat_trf(:,:,ii) = V\rho_mat(:,:,ii)*V;
-% end
-% 
-% rho11_trf = reshape(real(rho_mat_trf(2,2,:)),[1,length(time)]);
-% rho10_real_trf = reshape(real(rho_mat_trf(2,1,:)),[1,length(time)]);
-% rho10_imag_trf = -reshape(imag(rho_mat_trf(1,2,:)),[1,length(time)]);
-% 
-% figure(2)
-% subplot(1,3,1,xscale="log"); hold on; box on
-% semilogx(time, 1-rho11_trf, '--r')
-% semilogx(time, 1-rho11_uqme_a, '-b')
-% hold off
-% 
-% subplot(1,3,2,xscale="log"); hold on; box on
-% semilogx(time, rho10_real_trf, '--r')
-% semilogx(time, rho10_real_uqme_a, '-b')
-% hold off
-% 
-% subplot(1,3,3,xscale="log"); hold on; box on
-% semilogx(time, rho10_imag_trf, '--r')
-% semilogx(time, rho10_imag_uqme_a, '-b')
 hold off
