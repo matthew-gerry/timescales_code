@@ -1,16 +1,15 @@
 % lepe_vmodel.m
 
-% Using the LEPE method (arxiv: 2301.06135) to assess the behaviour of
-% coherences and populations in transient dynamics for the V model in the
-% basis including the gound state, |1>, and the '+' and '-' superpositions
-% of the two excited states: |+/->= (|2> +/- |3>)/sqrt(2), where |2> and
-% |3> are nearly degenerate.
+% Using the LEPE method (Phys Rev E 108, 014130, 2023) to assess the
+% behaviour of coherences and populations in transient dynamics for the V
+% model in the basis including the gound state, |1>, and the '+' and '-' 
+% superpositions of the two excited states: |+/->= (|2> +/- |3>)/sqrt(2), 
+% where |2> and |3> are nearly degenerate.
 
 % System part of the interaction Hamiltonian in this basis: 
 % S = [[0,1,0],[1,0,0],[0,0,0]] - jumps upwards and downwards between |1>
-% and |+>. In this basis, all coherences involving leve
-% l 1 and the real 
-% part of the coherence rho_(+-) decouple from the rest of the dynamics,
+% and |+>. In this basis, all coherences involving level 1, and the real 
+% part of the coherence rho_(+-), decouple from the rest of the dynamics,
 % leaving a homogeneous system of three equations.
 
 % Matthew Gerry, October 2023
@@ -20,7 +19,7 @@
 %                                           excited and ground states
 %                                           weighted by temperature.
 % P2 = (rho_(++) - rho_(--))/2            - Polarization between the two
-%                                           exited states.
+%                                           excited states.
 % cI                                      - Imaginary part of the coherence
 %                                           rho_(+-).
 % At steady state (Gibbs state), P1=P2=cI=0.
@@ -28,7 +27,7 @@
 
 %%%% CONSTANTS %%%%
 
-% Values we will substitute in for numerics, plotting later on
+% Values we will substitute in later on for numerics and plotting
 a = 0.02;
 T = 1;
 b_val = 1/T;
@@ -77,15 +76,11 @@ B3 = [[0, 0, 1];
 
 
 % Initial state in terms of the matrix elements in the 1,+,- basis
-% rho_init_11 = 0;
-% rho_init_pp = 0.64;
-% cI_init = 0.48;
 rho_init_11 = 1;
 rho_init_pp = 0;
 cI_init = 0;
 
 rho_init_mm = 1 - rho_init_11 - rho_init_pp;
-
 
 % Initial state in the format of x = [P1; P2; cI]
 P1_init = (rho_init_pp - exp(-b*nu)*rho_init_11)/2;
@@ -138,10 +133,12 @@ for ii=1:length(time)
     x_u(:,ii) = expm(L*time(ii))*x_init_u;
 end
 
+% Recover the matrix elements from the elements of x
 rho11_u = (2*(x_u(2,:) - 2*x_u(1,:)) + 1)/Z_val;
 rhopp_u = (2*(x_u(1,:) + f_val*x_u(2,:)) + f_val)/Z_val;
 rhomm_u = (f_val + 2*x_u(1,:) - 2*(1+f_val)*x_u(2,:))/Z_val;
 cI_u = x_u(3,:);
+
 
 %%%% PLOTTING %%%%
 
@@ -200,9 +197,9 @@ hold off
 
 % In this case, if we start with rho_(22) = rho_(33), they remain equal at
 % all times. We consider that case here, and eliminate the variable
-% representing the population difference between them. However, the real
-% part of the coherence couples to the rest of the dynamics so we still
-% have three variables.
+% representing the population difference between them. However, in contrast
+% to the transformed basis, the real part of the coherence couples to the
+% rest of the dynamics so we still have three variables.
 
 % Matthew Gerry, October 2023
 
@@ -219,7 +216,7 @@ hold off
 
 %%%% CONSTANTS %%%%
 
-% Values we will substitute in for numerics, plotting later on
+% Values we will substitute in later on for numerics and plotting
 a = 0.02;
 T = 1;
 b_val = 1/T;
@@ -268,9 +265,6 @@ B3 = [[0, 0, 1];
 
 
 % Initial state in terms of the matrix elements in the 1,+,- basis
-% rho_init_11 = 0;
-% rho_init_pp = 0.64;
-% cI_init = 0.48;
 rho_init_11 = 1;
 cR_init = 0;
 cI_init = 0;
@@ -351,7 +345,6 @@ cI_plot = subs(cI, [k,D,b,nu],[k_val,D_val,b_val,nu_val]);
 cI_plot = double(subs(cI_plot,t,time));
 
 % Plot the matrix elements
-
 figure(1)
 subplot(1,2,1,xscale="log"); hold on; box on
 plot(nu_val*time, rho11_u, DisplayName="$\rho_{11}$", LineWidth=1.5)
